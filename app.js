@@ -16,9 +16,11 @@ const gridWidth = canvas.width / CELL_SIZE;
 const gridHeight = canvas.width / CELL_SIZE;
 
 let play = false;
+let isMouseDown = false;
 let intervalID = null;
 
-ctx.imageSmoothingEnabled = false;
+let startX = 0;
+let startY = 0;
 
 for (let row = 0; row < gridHeight+2; row++) {
     let currentRow = [];
@@ -109,11 +111,49 @@ document.addEventListener("keydown", function(e) {
 });
 
 canvas.addEventListener("mousedown", function(e) {
-    const gridX = (Math.floor((e.clientX - canvas.offsetLeft) / CELL_SIZE)) + 1;
-    const gridY = (Math.floor( (e.clientY - canvas.offsetTop) / CELL_SIZE)) + 1;
+    isMouseDown = true;
+    startX = (Math.floor((e.clientX - canvas.offsetLeft) / CELL_SIZE)) + 1;
+    startY = (Math.floor( (e.clientY - canvas.offsetTop) / CELL_SIZE)) + 1;
 
-    grid[gridY][gridX] = !grid[gridY][gridX];
+    grid[startY][startX] = !grid[startY][startX];
     drawGrid();
 });
+
+canvas.addEventListener("mouseup", function() {
+    isMouseDown = false;
+});
+
+canvas.addEventListener("mousemove", function(e) {
+    if (isMouseDown) {
+        const endX = (Math.floor((e.clientX - canvas.offsetLeft) / CELL_SIZE)) + 1;
+        const endY = (Math.floor((e.clientY - canvas.offsetTop) / CELL_SIZE)) + 1;
+        drawLine(startX, startY, endX, endY);
+        startX = endX;
+        startY = endY;
+        drawGrid();
+    }
+});
+
+function drawLine(x1, y1, x2, y2) {
+    let dx = Math.abs(x2 - x1);
+    let dy = Math.abs(y2 - y1);
+    let sx = x1 < x2 ? 1 : -1;
+    let sy = y1 < y2 ? 1 : -1;
+    let err = dx - dy;
+
+    while (true) {
+        grid[y1][x1] = true;
+        if (x1 === x2 && y1 === y2) break;
+        let e2 = err * 2;
+        if (e2 > -dy) { 
+            err -= dy;
+            x1 += sx;
+        }
+        if (e2 < dx) { 
+            err += dx;
+            y1 += sy;
+        }
+    }
+}
 
 drawGrid();
